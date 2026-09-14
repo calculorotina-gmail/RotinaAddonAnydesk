@@ -1,0 +1,80 @@
+@page "/remoteids"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>IDs AnyDesk Remotos Registados</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">IDs remotos explicitamente autorizados e registados no sistema.</p>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Lista</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID AnyDesk</th>
+                <th>Alias</th>
+                <th>Localização</th>
+                <th>Descrição</th>
+                <th>Computador ID</th>
+                <th>Autorizado</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in _remoteIds)
+            {
+                <tr>
+                    <td><code>@r.AnyDeskId</code></td>
+                    <td><strong>@r.Alias</strong></td>
+                    <td>
+                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                            <span style="font-size: 1.1rem;" title="@r.CountryCode">@(string.IsNullOrWhiteSpace(r.CountryFlag) ? "🌐" : r.CountryFlag)</span>
+                            <span style="font-size: 0.85rem; font-weight: 500;">@(string.IsNullOrWhiteSpace(r.Location) ? "Desconhecida" : r.Location)</span>
+                        </div>
+                    </td>
+                    <td>@r.Description</td>
+                    <td><small>@r.ComputerId</small></td>
+                    <td>
+                        <button type="button" @onclick="() => ToggleAuthorization(r)" title="Clique para alterar autorização (Sim/Não)"
+                                style="border: none; outline: none; cursor: pointer; padding: 0.35rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.2s ease; @(r.IsAuthorized ? "background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);" : "background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);")">
+                            @if (r.IsAuthorized)
+                            {
+                                <span>🟢 Sim</span>
+                            }
+                            else
+                            {
+                                <span>🔴 Não</span>
+                            }
+                        </button>
+                    </td>
+                    <td>
+                        <button class="btn-action btn-action-danger" @onclick="() => DeleteRemoteId(r.Id)">Remover</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<RemoteAnyDeskIdDto> _remoteIds = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _remoteIds = await ApiClient.GetRemoteIdsAsync();
+
+    private async Task ToggleAuthorization(RemoteAnyDeskIdDto r)
+    {
+        r.IsAuthorized = !r.IsAuthorized;
+        await ApiClient.UpdateRemoteIdAsync(r.Id, r);
+        await LoadAsync();
+    }
+
+    private async Task DeleteRemoteId(Guid id)
+    {
+        await ApiClient.DeleteRemoteIdAsync(id);
+        await LoadAsync();
+    }
+}

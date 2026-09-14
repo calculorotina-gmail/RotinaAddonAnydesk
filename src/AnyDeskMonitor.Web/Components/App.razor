@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <base href="/" />
+    <title>AnyDesk Monitor - Painel Administrativo</title>
+    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <HeadOutlet @rendermode="InteractiveServer" />
+</head>
+
+<body>
+    <Routes @rendermode="InteractiveServer" />
+    <script src="_framework/blazor.web.js"></script>
+    <script>
+        window.themeHelper = {
+            getTheme: function () {
+                return localStorage.getItem('theme') || 'dark';
+            },
+            setTheme: function (theme) {
+                localStorage.setItem('theme', theme);
+                document.documentElement.setAttribute('data-theme', theme);
+                document.body.setAttribute('data-theme', theme);
+                var container = document.querySelector('.app-container');
+                if (container) container.setAttribute('data-theme', theme);
+            },
+            initTheme: function () {
+                var theme = localStorage.getItem('theme') || 'dark';
+                document.documentElement.setAttribute('data-theme', theme);
+                document.body.setAttribute('data-theme', theme);
+                var container = document.querySelector('.app-container');
+                if (container) container.setAttribute('data-theme', theme);
+                return theme;
+            }
+        };
+        window.themeHelper.initTheme();
+    </script>
+</body>
+
+</html>

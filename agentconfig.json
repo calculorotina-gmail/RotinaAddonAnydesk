@@ -1,0 +1,9 @@
+{
+  "ServerUrl": "http://localhost:5000",
+  "WebDashboardUrl": "http://localhost:7001",
+  "AgentId": "",
+  "InstallationId": "",
+  "HeartbeatIntervalSeconds": 30,
+  "AutoStart": true,
+  "ApiToken": null
+}

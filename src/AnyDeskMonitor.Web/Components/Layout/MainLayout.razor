@@ -1,0 +1,84 @@
+@inherits LayoutComponentBase
+@using Microsoft.AspNetCore.SignalR.Client
+@using AnyDeskMonitor.Shared.Constants
+@inject IConfiguration Config
+@inject IJSRuntime JSRuntime
+
+<div class="app-container" data-theme="@_currentTheme">
+    <div class="sidebar">
+        <div class="brand">
+            <div class="brand-icon">A</div>
+            <span>AnyDesk Monitor</span>
+        </div>
+        <NavMenu />
+    </div>
+
+    <div class="main-content">
+        <div class="top-navbar">
+            <div class="page-title">
+                Painel de Monitoramento Centralizado 
+                <span style="font-size: 0.75rem; background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 2px 8px; border-radius: 12px; margin-left: 0.75rem; font-weight: 600;">v1.1.2</span>
+            </div>
+            <div class="top-actions">
+                <button class="btn-theme-toggle" @onclick="ToggleTheme">
+                    @(_currentTheme == "dark" ? "☀️ Modo Claro" : "🌙 Modo Escuro")
+                </button>
+            </div>
+        </div>
+
+        <div class="content-body">
+            @Body
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _currentTheme = "dark";
+    private HubConnection? _hubConnection;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var hubUrl = (Config["API_URL"] ?? "http://localhost:5000").TrimEnd('/') + SignalRConstants.HubUrl;
+        try
+        {
+            _hubConnection = new HubConnectionBuilder()
+                .WithUrl(hubUrl)
+                .WithAutomaticReconnect()
+                .Build();
+
+            await _hubConnection.StartAsync();
+            await _hubConnection.SendAsync("JoinDashboardGroup");
+        }
+        catch
+        {
+            // Handle offline/disconnected state safely
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            try
+            {
+                var savedTheme = await JSRuntime.InvokeAsync<string>("window.themeHelper.initTheme");
+                if (!string.IsNullOrEmpty(savedTheme) && savedTheme != _currentTheme)
+                {
+                    _currentTheme = savedTheme;
+                    StateHasChanged();
+                }
+            }
+            catch { }
+        }
+    }
+
+    private async Task ToggleTheme()
+    {
+        _currentTheme = _currentTheme == "dark" ? "light" : "dark";
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("window.themeHelper.setTheme", _currentTheme);
+        }
+        catch { }
+    }
+}

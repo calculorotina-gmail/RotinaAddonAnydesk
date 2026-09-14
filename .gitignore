@@ -1,0 +1,10 @@
+# Build and Publish output
+publish/
+bin/
+obj/
+.vs/
+*.exe
+*.dll
+*.pdb
+*.nupkg
+*.log

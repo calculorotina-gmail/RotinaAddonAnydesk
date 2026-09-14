@@ -1,0 +1,76 @@
+@page "/agents"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>Agentes Registados (RotinaAddonAnydesk)</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Gestão administrativa de agentes instalados nas máquinas Windows.</p>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Lista</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Installation ID</th>
+                <th>Máquina</th>
+                <th>Versão</th>
+                <th>IP Local</th>
+                <th>Status</th>
+                <th>Último Heartbeat</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in _agents)
+            {
+                <tr>
+                    <td><code>@a.InstallationId</code></td>
+                    <td><strong>@a.MachineName</strong></td>
+                    <td>v@a.Version</td>
+                    <td>@a.IPAddress</td>
+                    <td>
+                        @if (a.Status == "ACTIVE")
+                        {
+                            <span class="status-pill status-online">🟢 ACTIVE</span>
+                        }
+                        else if (a.Status == "OFFLINE")
+                        {
+                            <span class="status-pill status-offline">🔴 OFFLINE</span>
+                        }
+                        else
+                        {
+                            <span class="status-pill status-unknown">🟡 @a.Status</span>
+                        }
+                    </td>
+                    <td>@(a.LastHeartbeat.HasValue ? a.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")</td>
+                    <td>
+                        <button class="btn-action" @onclick="() => SyncAgent(a.Id)">Sincronizar</button>
+                        <button class="btn-action btn-action-danger" @onclick="() => DisableAgent(a.Id)">Desativar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<AgentStatusDto> _agents = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _agents = await ApiClient.GetAgentsAsync();
+
+    private async Task SyncAgent(Guid id)
+    {
+        await ApiClient.SyncAgentAsync(id);
+        await LoadAsync();
+    }
+
+    private async Task DisableAgent(Guid id)
+    {
+        await ApiClient.DisableAgentAsync(id);
+        await LoadAsync();
+    }
+}

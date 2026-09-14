@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: anydeskmonitor-db
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-anydeskmonitor}
+      POSTGRES_USER: ${POSTGRES_USER:-anydeskmonitor}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-CHANGE_ME}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: .
+      dockerfile: src/AnyDeskMonitor.Api/Dockerfile
+    container_name: anydeskmonitor-api
+    restart: always
+    environment:
+      ConnectionStrings__DefaultConnection: "Host=db;Database=${POSTGRES_DB:-anydeskmonitor};Username=${POSTGRES_USER:-anydeskmonitor};Password=${POSTGRES_PASSWORD:-CHANGE_ME}"
+      JWT_SECRET: ${JWT_SECRET:-AnyDeskMonitor_Production_SecretKey_Minimum_32Bytes_Long_Key!}
+      JWT_ISSUER: ${JWT_ISSUER:-AnyDeskMonitor}
+      JWT_AUDIENCE: ${JWT_AUDIENCE:-AnyDeskMonitor}
+      API_URL: ${API_URL:-http://localhost:5000}
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+
+  web:
+    build:
+      context: .
+      dockerfile: src/AnyDeskMonitor.Web/Dockerfile
+    container_name: anydeskmonitor-web
+    restart: always
+    environment:
+      API_URL: "http://api:5000"
+    ports:
+      - "7001:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:

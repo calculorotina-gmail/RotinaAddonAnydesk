@@ -1,0 +1,44 @@
+@page "/audit"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>Logs de Auditoria</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Registro de auditoria para ações administrativas e alterações de configuração.</p>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Auditoria</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Utilizador</th>
+                <th>Ação</th>
+                <th>Entidade</th>
+                <th>Detalhes</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var a in _auditLogs)
+            {
+                <tr>
+                    <td>@a.Timestamp.ToLocalTime().ToString("g")</td>
+                    <td><strong>@a.User</strong></td>
+                    <td>@a.Action</td>
+                    <td>@a.Entity</td>
+                    <td>@a.Details</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<AuditDto> _auditLogs = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _auditLogs = await ApiClient.GetAuditLogsAsync();
+}

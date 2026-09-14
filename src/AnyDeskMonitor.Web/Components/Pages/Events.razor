@@ -1,0 +1,44 @@
+@page "/events"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>Registro de Eventos do Sistema</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Eventos de status, heartbeats, registos e alterações administrativas.</p>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Eventos</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Data/Hora</th>
+                <th>Tipo de Evento</th>
+                <th>Mensagem</th>
+                <th>Utilizador</th>
+                <th>Computador ID</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var e in _events)
+            {
+                <tr>
+                    <td>@e.CreatedAt.ToLocalTime().ToString("g")</td>
+                    <td><strong>@e.Type</strong></td>
+                    <td>@e.Message</td>
+                    <td>@(e.User ?? "Sistema")</td>
+                    <td><small>@(e.ComputerId?.ToString() ?? "Global")</small></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<EventDto> _events = new();
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _events = await ApiClient.GetEventsAsync();
+}

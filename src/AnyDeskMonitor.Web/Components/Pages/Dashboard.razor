@@ -1,0 +1,250 @@
+@page "/"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+@inject NavigationManager Navigation
+
+<div class="stats-grid">
+    <div class="stat-card">
+        <div class="stat-header">TOTAL COMPUTADORES</div>
+        <div class="stat-value">@_stats.TotalComputers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">COMPUTADORES ONLINE</div>
+        <div class="stat-value" style="color: #10b981;">@_stats.OnlineComputers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">COMPUTADORES OFFLINE</div>
+        <div class="stat-value" style="color: #ef4444;">@_stats.OfflineComputers</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-header">AGENTES ATIVOS</div>
+        <div class="stat-value" style="color: #3b82f6;">@_stats.ActiveAgents</div>
+    </div>
+</div>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <input class="search-input" placeholder="Pesquisar por computador, AnyDesk ID ou alias..." @bind="_search" @bind:event="oninput" @onkeyup="FilterComputers" style="min-width: 300px;" />
+        
+        <div style="display: flex; gap: 0.5rem;">
+            <select class="select-filter" @onchange="OnStatusFilterChanged">
+                <option value="">Todos os Status</option>
+                <option value="ONLINE">ONLINE</option>
+                <option value="OFFLINE">OFFLINE</option>
+                <option value="UNKNOWN">UNKNOWN</option>
+            </select>
+
+            <button class="btn-action" @onclick="RefreshDataAsync">🔄 Atualizar</button>
+        </div>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Computador</th>
+                <th>ID AnyDesk</th>
+                <th>Sistema Operacional</th>
+                <th>IP Local</th>
+                <th>Status</th>
+                <th>Última Comunicação</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (_computers == null || !_computers.Any())
+            {
+                <tr>
+                    <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 2rem;">
+                        Nenhum computador encontrado.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var c in _filteredComputers)
+                {
+                    <tr>
+                        <td>
+                            <strong>@c.Name</strong><br />
+                            <small style="color: var(--text-secondary);">@c.MachineName</small>
+                        </td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(c.AnyDeskId))
+                            {
+                                <span style="font-family: monospace; font-weight: bold; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">@c.AnyDeskId</span>
+                            }
+                            else
+                            {
+                                <span style="color: var(--text-secondary); font-style: italic;">Indisponível</span>
+                            }
+                        </td>
+                        <td>@c.OperatingSystem</td>
+                        <td><code>@c.IPAddress</code></td>
+                        <td>
+                            @if (c.Status == "ONLINE")
+                            {
+                                <span class="status-pill status-online">🟢 ONLINE</span>
+                            }
+                            else if (c.Status == "OFFLINE")
+                            {
+                                <span class="status-pill status-offline">🔴 OFFLINE</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-unknown">🟡 UNKNOWN</span>
+                            }
+                        </td>
+                        <td>
+                            @(c.LastHeartbeat.HasValue ? c.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")
+                        </td>
+                        <td>
+                            <a class="btn-action" href="computers/@c.Id">Detalhes</a>
+                            <button class="btn-action" @onclick="() => SyncComputerAsync(c.Id)">Sincronizar</button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
+    <div class="card-table">
+        <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                🌐 IDs Remotos e Localização
+            </h3>
+            <a class="btn-action" href="remoteids">Ver Todos</a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ID AnyDesk</th>
+                    <th>Alias</th>
+                    <th>Localização / Bandeira</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_recentRemoteIds == null || !_recentRemoteIds.Any())
+                {
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            Nenhum ID remoto registado.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var r in _recentRemoteIds.Take(5))
+                    {
+                        <tr>
+                            <td><code>@r.AnyDeskId</code></td>
+                            <td><strong>@(string.IsNullOrWhiteSpace(r.Alias) ? "Sem Alias" : r.Alias)</strong></td>
+                            <td>
+                                <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                                    <span style="font-size: 1.1rem;" title="@r.CountryCode">@(string.IsNullOrWhiteSpace(r.CountryFlag) ? "🌐" : r.CountryFlag)</span>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">@(string.IsNullOrWhiteSpace(r.Location) ? "Desconhecida" : r.Location)</span>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card-table">
+        <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+                📡 Sessões Remotas Recentes
+            </h3>
+            <a class="btn-action" href="sessions">Ver Todas</a>
+        </div>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>AnyDesk Remoto</th>
+                    <th>Localização / Bandeira</th>
+                    <th>Direção</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (_recentSessions == null || !_recentSessions.Any())
+                {
+                    <tr>
+                        <td colspan="3" style="text-align: center; color: var(--text-secondary); padding: 1rem;">
+                            Nenhuma sessão registada.
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var s in _recentSessions.Take(5))
+                    {
+                        <tr>
+                            <td><code>@s.RemoteAnyDeskId</code></td>
+                            <td>
+                                <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                                    <span style="font-size: 1.1rem;" title="@s.CountryCode">@(string.IsNullOrWhiteSpace(s.CountryFlag) ? "🌐" : s.CountryFlag)</span>
+                                    <span style="font-size: 0.85rem; font-weight: 500;">@(string.IsNullOrWhiteSpace(s.Location) ? "Desconhecida" : s.Location)</span>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="status-pill" style="font-size: 0.75rem; padding: 0.2rem 0.5rem;">@s.InitiatedBy</span>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    private DashboardStatsDto _stats = new();
+    private List<ComputerDto> _computers = new();
+    private List<ComputerDto> _filteredComputers = new();
+    private List<RemoteAnyDeskIdDto> _recentRemoteIds = new();
+    private List<RemoteSessionDto> _recentSessions = new();
+
+    private string _search = "";
+    private string _statusFilter = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshDataAsync();
+    }
+
+    private async Task RefreshDataAsync()
+    {
+        _stats = await ApiClient.GetDashboardStatsAsync();
+        _computers = await ApiClient.GetComputersAsync();
+        _recentRemoteIds = await ApiClient.GetRemoteIdsAsync();
+        _recentSessions = await ApiClient.GetSessionsAsync();
+        FilterComputers();
+    }
+
+    private async Task SyncComputerAsync(Guid id)
+    {
+        await ApiClient.SyncComputerAsync(id);
+        await RefreshDataAsync();
+    }
+
+    private void OnStatusFilterChanged(ChangeEventArgs e)
+    {
+        _statusFilter = e.Value?.ToString() ?? "";
+        FilterComputers();
+    }
+
+    private void FilterComputers()
+    {
+        _filteredComputers = _computers.Where(c =>
+            (string.IsNullOrWhiteSpace(_search) ||
+             c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             c.MachineName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+             (c.AnyDeskId != null && c.AnyDeskId.Contains(_search, StringComparison.OrdinalIgnoreCase))) &&
+            (string.IsNullOrWhiteSpace(_statusFilter) || c.Status.Equals(_statusFilter, StringComparison.OrdinalIgnoreCase))
+        ).ToList();
+    }
+}

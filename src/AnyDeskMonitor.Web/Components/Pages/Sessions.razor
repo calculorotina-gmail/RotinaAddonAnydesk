@@ -1,0 +1,145 @@
+@page "/sessions"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>Histórico de Sessões Remotas Registadas</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Sessões de entrada e saída obtidas através das fontes suportadas pelo sistema.</p>
+
+@if (!string.IsNullOrEmpty(_message))
+{
+    <div style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; padding: 0.75rem 1rem; border-radius: 8px; margin-bottom: 1rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+        <span>@_message</span>
+        <button style="background: transparent; border: none; color: #ef4444; font-size: 1.1rem; cursor: pointer;" @onclick='() => _message = null'>✕</button>
+    </div>
+}
+
+<div class="card-table">
+    <div class="table-toolbar" style="display: flex; gap: 0.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+        <div style="display: flex; gap: 0.5rem; align-items: center;">
+            <button class="btn-action @(_filter == "ALL" ? "btn-primary" : "")" @onclick='() => SetFilter("ALL")'>
+                Todas (@_sessions.Count)
+            </button>
+            <button class="btn-action @(_filter == "ENTRADA" ? "btn-primary" : "")" @onclick='() => SetFilter("ENTRADA")' style="color: #2ecc71; font-weight: 600;">
+                📥 Entrada (@_sessions.Count(s => IsIncoming(s)))
+            </button>
+            <button class="btn-action @(_filter == "SAIDA" ? "btn-primary" : "")" @onclick='() => SetFilter("SAIDA")' style="color: #3498db; font-weight: 600;">
+                📤 Saída (@_sessions.Count(s => !IsIncoming(s)))
+            </button>
+        </div>
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Histórico</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Início</th>
+                <th>Computador ID</th>
+                <th>AnyDesk Local</th>
+                <th>AnyDesk Remoto</th>
+                <th>Localização</th>
+                <th>Direção / Iniciado Por</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!FilteredSessions.Any())
+            {
+                <tr>
+                    <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 1.5rem;">
+                        Nenhuma sessão remota registada para os filtros selecionados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var s in FilteredSessions)
+                {
+                    var incoming = IsIncoming(s);
+                    <tr>
+                        <td>@s.StartedAt.ToLocalTime().ToString("g")</td>
+                        <td><small>@s.ComputerId</small></td>
+                        <td><code>@(s.LocalAnyDeskId ?? "N/A")</code></td>
+                        <td><code>@s.RemoteAnyDeskId</code></td>
+                        <td>
+                            <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.25rem 0.6rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                                <span style="font-size: 1.1rem;" title="@s.CountryCode">@(string.IsNullOrWhiteSpace(s.CountryFlag) ? "🌐" : s.CountryFlag)</span>
+                                <span style="font-size: 0.85rem; font-weight: 500;">@(string.IsNullOrWhiteSpace(s.Location) ? "Desconhecida" : s.Location)</span>
+                            </div>
+                        </td>
+                        <td>
+                            @if (incoming)
+                            {
+                                <span class="status-pill" style="background: rgba(46, 204, 113, 0.15); color: #2ecc71; border: 1px solid rgba(46, 204, 113, 0.3); font-weight: bold;">
+                                    📥 ENTRADA
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-pill" style="background: rgba(52, 152, 219, 0.15); color: #3498db; border: 1px solid rgba(52, 152, 219, 0.3); font-weight: bold;">
+                                    📤 SAÍDA
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            @if (s.Status == "TERMINATED" || s.Status == "KILLED")
+                            {
+                                <span class="status-pill" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: bold;">
+                                    🔴 TASKKILL
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-online">@s.Status</span>
+                            }
+                        </td>
+                        <td>
+                            <button class="btn-action btn-action-danger" @onclick="() => KillSessionAsync(s.Id)" title="Encerrar processo da sessão via Taskkill" style="display: inline-flex; align-items: center; gap: 0.3rem;">
+                                ⚡ Taskkill
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<RemoteSessionDto> _sessions = new();
+    private string _filter = "ALL";
+    private string? _message;
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync() => _sessions = await ApiClient.GetSessionsAsync();
+
+    private void SetFilter(string filter) => _filter = filter;
+
+    private async Task KillSessionAsync(Guid id)
+    {
+        var success = await ApiClient.KillSessionAsync(id);
+        if (success)
+        {
+            _message = "⚡ Taskkill executado com sucesso! A sessão foi encerrada.";
+        }
+        else
+        {
+            _message = "⚠️ Não foi possível executar o Taskkill na sessão.";
+        }
+        await LoadAsync();
+    }
+
+    private bool IsIncoming(RemoteSessionDto s) => 
+        string.Equals(s.InitiatedBy, "ENTRADA", StringComparison.OrdinalIgnoreCase) || 
+        string.Equals(s.InitiatedBy, "Incoming", StringComparison.OrdinalIgnoreCase) ||
+        string.Equals(s.InitiatedBy, "Entrada", StringComparison.OrdinalIgnoreCase);
+
+    private IEnumerable<RemoteSessionDto> FilteredSessions => _filter switch
+    {
+        "ENTRADA" => _sessions.Where(s => IsIncoming(s)),
+        "SAIDA" => _sessions.Where(s => !IsIncoming(s)),
+        _ => _sessions
+    };
+}
+

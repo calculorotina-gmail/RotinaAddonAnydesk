@@ -1,0 +1,73 @@
+@page "/computers"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+
+<h2>Gestão de Computadores</h2>
+<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Lista completa dos computadores monitorizados pelo agente RotinaAddonAnydesk.</p>
+
+<div class="card-table">
+    <div class="table-toolbar">
+        <input class="search-input" placeholder="Pesquisar..." @bind="_search" @bind:event="oninput" @onkeyup="Filter" style="min-width: 280px;" />
+        <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar</button>
+    </div>
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>Nome / Máquina</th>
+                <th>AnyDesk ID</th>
+                <th>Sistema Operacional</th>
+                <th>IP Local</th>
+                <th>Status</th>
+                <th>Último Heartbeat</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var c in _filtered)
+            {
+                <tr>
+                    <td><strong>@c.Name</strong><br /><small>@c.MachineName</small></td>
+                    <td><code>@c.AnyDeskId</code></td>
+                    <td>@c.OperatingSystem</td>
+                    <td>@c.IPAddress</td>
+                    <td>
+                        @if (c.Status == "ONLINE") { <span class="status-pill status-online">🟢 ONLINE</span> }
+                        else if (c.Status == "OFFLINE") { <span class="status-pill status-offline">🔴 OFFLINE</span> }
+                        else { <span class="status-pill status-unknown">🟡 UNKNOWN</span> }
+                    </td>
+                    <td>@(c.LastHeartbeat.HasValue ? c.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")</td>
+                    <td>
+                        <a class="btn-action" href="computers/@c.Id">Ver Detalhes</a>
+                        <button class="btn-action" @onclick="() => SyncComputerAsync(c.Id)">Sincronizar</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private List<ComputerDto> _list = new();
+    private List<ComputerDto> _filtered = new();
+    private string _search = "";
+
+    protected override async Task OnInitializedAsync() => await LoadAsync();
+
+    private async Task LoadAsync()
+    {
+        _list = await ApiClient.GetComputersAsync();
+        Filter();
+    }
+
+    private async Task SyncComputerAsync(Guid id)
+    {
+        await ApiClient.SyncComputerAsync(id);
+        await LoadAsync();
+    }
+
+    private void Filter()
+    {
+        _filtered = _list.Where(c => string.IsNullOrWhiteSpace(_search) || c.Name.Contains(_search, StringComparison.OrdinalIgnoreCase) || c.MachineName.Contains(_search, StringComparison.OrdinalIgnoreCase)).ToList();
+    }
+}

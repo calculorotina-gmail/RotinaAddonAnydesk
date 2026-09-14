@@ -1,0 +1,55 @@
+@page "/login"
+@using AnyDeskMonitor.Shared.DTOs
+@using AnyDeskMonitor.Web.Services
+@inject WebApiClient ApiClient
+@inject NavigationManager Navigation
+
+<div style="max-width: 400px; margin: 4rem auto; background: var(--bg-card); padding: 2rem; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: var(--card-shadow);">
+    <h2 style="text-align: center; margin-bottom: 0.5rem; color: var(--accent-color);">AnyDesk Monitor</h2>
+    <p style="text-align: center; color: var(--text-secondary); margin-bottom: 1.5rem;">Autenticação no Painel Administrativo</p>
+
+    @if (!string.IsNullOrEmpty(_errorMessage))
+    {
+        <div style="background: rgba(239,68,68,0.15); color: #ef4444; padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; font-size: 0.875rem;">
+            @_errorMessage
+        </div>
+    }
+
+    <div style="display: flex; flex-direction: column; gap: 1rem;">
+        <div>
+            <label style="display: block; font-weight: bold; margin-bottom: 0.25rem;">Utilizador</label>
+            <input class="search-input" style="width: 100%;" placeholder="admin" @bind="_username" />
+        </div>
+        <div>
+            <label style="display: block; font-weight: bold; margin-bottom: 0.25rem;">Palavra-passe</label>
+            <input type="password" class="search-input" style="width: 100%;" placeholder="••••••••" @bind="_password" />
+        </div>
+        <button class="btn-action" style="padding: 0.75rem; font-size: 1rem;" @onclick="HandleLoginAsync">Entrar</button>
+    </div>
+</div>
+
+@code {
+    private string _username = "";
+    private string _password = "";
+    private string? _errorMessage;
+
+    private async Task HandleLoginAsync()
+    {
+        _errorMessage = null;
+        if (string.IsNullOrWhiteSpace(_username) || string.IsNullOrWhiteSpace(_password))
+        {
+            _errorMessage = "Por favor, preencha o utilizador e a palavra-passe.";
+            return;
+        }
+
+        var result = await ApiClient.LoginAsync(new LoginDto { Username = _username, Password = _password });
+        if (result != null)
+        {
+            Navigation.NavigateTo("");
+        }
+        else
+        {
+            _errorMessage = "Utilizador ou palavra-passe incorretos.";
+        }
+    }
+}
