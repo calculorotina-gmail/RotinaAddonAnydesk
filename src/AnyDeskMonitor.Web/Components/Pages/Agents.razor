@@ -2,75 +2,488 @@
 @using AnyDeskMonitor.Shared.DTOs
 @using AnyDeskMonitor.Web.Services
 @inject WebApiClient ApiClient
+@inject NavigationManager Navigation
 
-<h2>Agentes Registados (RotinaAddonAnydesk)</h2>
-<p style="color: var(--text-secondary); margin-bottom: 1.5rem;">Gestão administrativa de agentes instalados nas máquinas Windows.</p>
-
-<div class="card-table">
-    <div class="table-toolbar">
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+    <div>
+        <h2 style="margin: 0; font-size: 1.6rem; color: #f8fafc;">Agentes Registados (RotinaAddonAnydesk)</h2>
+        <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0;">Gestão centralizada de todos os agentes instalados e sincronizados nos computadores.</p>
+    </div>
+    <div style="display: flex; gap: 0.75rem;">
         <button class="btn-action" @onclick="LoadAsync">🔄 Atualizar Lista</button>
     </div>
+</div>
+
+<div class="card-table">
+    <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
+        <input class="search-input" placeholder="Pesquisar por máquina, IP ou Installation ID..." @bind="_search" @bind:event="oninput" style="min-width: 320px;" />
+        <span style="color: var(--text-secondary); font-size: 0.85rem;">Clique em qualquer agente para abrir o Painel Completo de Opções</span>
+    </div>
+
     <table class="data-table">
         <thead>
             <tr>
-                <th>Installation ID</th>
                 <th>Máquina</th>
+                <th>Installation ID</th>
+                <th>ID AnyDesk Local</th>
                 <th>Versão</th>
                 <th>IP Local</th>
-                <th>Status</th>
+                <th>Status Agente</th>
                 <th>Último Heartbeat</th>
                 <th>Ações</th>
             </tr>
         </thead>
         <tbody>
-            @foreach (var a in _agents)
+            @if (_filteredAgents == null || !_filteredAgents.Any())
             {
                 <tr>
-                    <td><code>@a.InstallationId</code></td>
-                    <td><strong>@a.MachineName</strong></td>
-                    <td>v@a.Version</td>
-                    <td>@a.IPAddress</td>
-                    <td>
-                        @if (a.Status == "ACTIVE")
-                        {
-                            <span class="status-pill status-online">🟢 ACTIVE</span>
-                        }
-                        else if (a.Status == "OFFLINE")
-                        {
-                            <span class="status-pill status-offline">🔴 OFFLINE</span>
-                        }
-                        else
-                        {
-                            <span class="status-pill status-unknown">🟡 @a.Status</span>
-                        }
-                    </td>
-                    <td>@(a.LastHeartbeat.HasValue ? a.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")</td>
-                    <td>
-                        <button class="btn-action" @onclick="() => SyncAgent(a.Id)">Sincronizar</button>
-                        <button class="btn-action btn-action-danger" @onclick="() => DisableAgent(a.Id)">Desativar</button>
+                    <td colspan="8" style="text-align: center; color: var(--text-secondary); padding: 2.5rem;">
+                        Nenhum agente registado encontrado.
                     </td>
                 </tr>
+            }
+            else
+            {
+                @foreach (var a in _filteredAgents)
+                {
+                    <tr style="cursor: pointer; transition: background 0.2s;" @onclick="() => SelectAgentAsync(a)">
+                        <td>
+                            <strong style="color: #60a5fa; font-size: 1.05rem;">@a.MachineName</strong><br />
+                            <small style="color: var(--text-secondary);">@a.OperatingSystem</small>
+                        </td>
+                        <td><code>@a.InstallationId</code></td>
+                        <td>
+                            @if (!string.IsNullOrWhiteSpace(GetComputerForAgent(a.ComputerId)?.AnyDeskId))
+                            {
+                                <span style="font-family: monospace; font-weight: bold; background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; color: #f8fafc;">
+                                    @GetComputerForAgent(a.ComputerId)?.AnyDeskId
+                                </span>
+                            }
+                            else
+                            {
+                                <span style="color: var(--text-secondary); font-style: italic;">Não Detetado</span>
+                            }
+                        </td>
+                        <td><span style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; padding: 2px 8px; border-radius: 4px; font-weight: 600;">v@a.Version</span></td>
+                        <td><code>@a.IPAddress</code></td>
+                        <td>
+                            @if (a.Status == "ACTIVE")
+                            {
+                                <span class="status-pill status-online">🟢 ACTIVE</span>
+                            }
+                            else if (a.Status == "OFFLINE")
+                            {
+                                <span class="status-pill status-offline">🔴 OFFLINE</span>
+                            }
+                            else
+                            {
+                                <span class="status-pill status-unknown">🟡 @a.Status</span>
+                            }
+                        </td>
+                        <td>@(a.LastHeartbeat.HasValue ? a.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")</td>
+                        <td @onclick:stopPropagation="true">
+                            <button class="btn-action" @onclick="() => SelectAgentAsync(a)">⚙️ Abrir Painel</button>
+                            <button class="btn-action" @onclick="() => SyncAgentAsync(a.Id)">🔄 Sincronizar</button>
+                        </td>
+                    </tr>
+                }
             }
         </tbody>
     </table>
 </div>
 
+@if (_selectedAgent != null)
+{
+    <!-- MODAL DO PAINEL DO AGENTE -->
+    <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 1.5rem;" @onclick="CloseModal">
+        <div style="background: #0f172a; border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 20px; width: 96vw; max-width: 1400px; max-height: 92vh; overflow-y: auto; padding: 2.25rem 2.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);" @onclick:stopPropagation="true">
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                <div>
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <h2 style="margin: 0; color: #f8fafc; font-size: 1.6rem;">🖥️ Painel do Agente: @_selectedAgent.MachineName</h2>
+                        @if (_selectedAgent.Status == "ACTIVE")
+                        {
+                            <span class="status-pill status-online">🟢 ATIVO</span>
+                        }
+                        else
+                        {
+                            <span class="status-pill status-offline">🔴 @_selectedAgent.Status</span>
+                        }
+                    </div>
+                    <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0;">Installation ID: <code>@_selectedAgent.InstallationId</code> • IP: @_selectedAgent.IPAddress</p>
+                </div>
+                <button @onclick="CloseModal" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8; font-size: 1.5rem; cursor: pointer; padding: 0.25rem 0.75rem; border-radius: 8px;">✕</button>
+            </div>
+
+            <!-- OPÇÕES E AÇÕES DO PAINEL DO AGENTE -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem;">
+                <div class="stat-card" style="background: rgba(30, 41, 59, 0.6);">
+                    <h3 style="margin-top: 0; font-size: 1rem; color: #60a5fa;">💻 Informações do Sistema</h3>
+                    <p style="margin: 0.4rem 0;"><strong>Sistema Operacional:</strong> @_selectedAgent.OperatingSystem</p>
+                    <p style="margin: 0.4rem 0;"><strong>Versão Agente:</strong> v@_selectedAgent.Version</p>
+                    <p style="margin: 0.4rem 0;"><strong>ID AnyDesk Local:</strong> <code style="font-size: 1rem; color: #f8fafc;">@(_selectedComputer?.AnyDeskId ?? "Não Detetado")</code></p>
+                    <p style="margin: 0.4rem 0;"><strong>Último Heartbeat:</strong> @(_selectedAgent.LastHeartbeat.HasValue ? _selectedAgent.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")</p>
+                </div>
+
+                <div class="stat-card" style="background: rgba(30, 41, 59, 0.6);">
+                    <h3 style="margin-top: 0; font-size: 1rem; color: #10b981;">⚡ Ações Rápidas do Agente</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; margin-top: 0.75rem;">
+                        <button class="btn-action" style="padding: 0.6rem;" @onclick="() => SyncAgentAsync(_selectedAgent.Id)">🔄 Forçar Sincronização Agente</button>
+                        @if (_selectedComputer != null)
+                        {
+                            <button class="btn-action" style="padding: 0.6rem; background: #8b5cf6;" @onclick="() => SyncComputerAsync(_selectedComputer.Id)">🔍 Rescanear Configurações AnyDesk</button>
+                        }
+                        <button class="btn-action btn-action-danger" style="padding: 0.6rem;" @onclick="() => ToggleAgentStatusAsync(_selectedAgent)">
+                            @(_selectedAgent.IsEnabled ? "🚫 Desativar Agente" : "🟢 Ativar Agente")
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ADICIONAR ID REMOTO -->
+            <div class="stat-card" style="background: rgba(30, 41, 59, 0.6); margin-bottom: 1.5rem;">
+                <h3 style="margin-top: 0; font-size: 1rem; color: #f59e0b;">➕ Adicionar ID AnyDesk Remoto a este Agente</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 0.75rem; margin-top: 0.75rem;">
+                    <input class="search-input" placeholder="ID AnyDesk Remoto (ex: 987654321)" @bind="_newRemoteId" />
+                    <input class="search-input" placeholder="Alias (ex: Servidor Central)" @bind="_newAlias" />
+                    <input class="search-input" placeholder="Localização (ex: Lisboa, Portugal)" @bind="_newLocation" />
+                    <input class="search-input" placeholder="Descrição/Observação" @bind="_newDescription" />
+                </div>
+                <button class="btn-action" style="margin-top: 0.75rem; width: 100%;" @onclick="AddRemoteIdAsync">➕ Registar Novo ID Remoto</button>
+            </div>
+
+            <!-- TABELA DE IDS REMOTOS ASSOCIADOS -->
+            <div class="card-table" style="margin-bottom: 1.5rem;">
+                <div class="table-toolbar">
+                    <h3 style="margin: 0; font-size: 1.05rem; color: #f8fafc;">🌐 IDs AnyDesk Remotos Associados</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>ID AnyDesk</th>
+                            <th>Alias</th>
+                            <th>Localização / Bandeira</th>
+                            <th>Descrição</th>
+                            <th>Estado de Autorização</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_agentRemoteIds == null || !_agentRemoteIds.Any())
+                        {
+                            <tr>
+                                <td colspan="6" style="text-align: center; color: var(--text-secondary); padding: 1.25rem;">
+                                    Nenhum ID AnyDesk remoto registado neste agente.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var r in _agentRemoteIds)
+                            {
+                                <tr>
+                                    <td><code>@r.AnyDeskId</code></td>
+                                    <td><strong>@(string.IsNullOrWhiteSpace(r.Alias) ? "Sem Alias" : r.Alias)</strong></td>
+                                    <td>
+                                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                            <span>@(string.IsNullOrWhiteSpace(r.CountryFlag) ? "🌐" : r.CountryFlag)</span>
+                                            <span style="font-size: 0.85rem;">@(string.IsNullOrWhiteSpace(r.Location) ? "Desconhecida" : r.Location)</span>
+                                        </div>
+                                    </td>
+                                    <td>@r.Description</td>
+                                    <td>
+                                        <div style="display: inline-flex; align-items: center; gap: 0.6rem;">
+                                            <button type="button" @onclick="() => ToggleAuthorizationAsync(r)" title="Clique para alternar bloqueio/autorização"
+                                                    style="border: none; cursor: pointer; padding: 0.4rem 0.85rem; border-radius: 9999px; font-weight: 700; font-size: 0.8rem; display: flex; align-items: center; gap: 0.4rem; transition: all 0.2s; @(r.IsAuthorized ? "background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);" : "background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);")">
+                                                <span>@(r.IsAuthorized ? "🟢 Permitido" : "🔴 Bloqueado")</span>
+                                            </button>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <button class="btn-action btn-action-danger" style="padding: 0.3rem 0.6rem;" @onclick="() => DeleteRemoteIdAsync(r.Id)">Remover</button>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- HISTÓRICO E SESSÕES REMOTAS DO AGENTE (ENTRADA / SAÍDA E TOGGLE BLOQUEIO) -->
+            <div class="card-table">
+                <div class="table-toolbar">
+                    <h3 style="margin: 0; font-size: 1.05rem; color: #f8fafc;">📡 Sessões Remotas (Entrada / Saída)</h3>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>AnyDesk Remoto</th>
+                            <th>Localização / Bandeira</th>
+                            <th>Tipo / Direção</th>
+                            <th>AnyDesk Local</th>
+                            <th>Iniciada Em</th>
+                            <th>Status</th>
+                            <th style="text-align: right;">Bloquear / Toggle Conexão</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (_agentSessions == null || !_agentSessions.Any())
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align: center; color: var(--text-secondary); padding: 1.25rem;">
+                                    Nenhuma sessão registada para este agente.
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            @foreach (var s in _agentSessions)
+                            {
+                                var isIncoming = string.Equals(s.InitiatedBy, "ENTRADA", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(s.InitiatedBy, "Incoming", StringComparison.OrdinalIgnoreCase) ||
+                                                 string.Equals(s.InitiatedBy, "Entrada", StringComparison.OrdinalIgnoreCase);
+                                var authorized = IsRemoteAuthorized(s.RemoteAnyDeskId);
+                                <tr>
+                                    <td><code>@s.RemoteAnyDeskId</code></td>
+                                    <td>
+                                        <div style="display: inline-flex; align-items: center; gap: 0.35rem; background: rgba(255, 255, 255, 0.05); padding: 0.2rem 0.5rem; border-radius: 6px;">
+                                            <span>@(string.IsNullOrWhiteSpace(s.CountryFlag) ? "🌐" : s.CountryFlag)</span>
+                                            <span style="font-size: 0.85rem;">@(string.IsNullOrWhiteSpace(s.Location) ? "Desconhecida" : s.Location)</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (isIncoming)
+                                        {
+                                            <span class="status-pill" style="background: rgba(16, 185, 129, 0.18); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-weight: bold;">
+                                                📥 ENTRADA
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-pill" style="background: rgba(59, 130, 246, 0.18); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); font-weight: bold;">
+                                                📤 SAÍDA
+                                            </span>
+                                        }
+                                    </td>
+                                    <td><code>@(s.LocalAnyDeskId ?? "N/A")</code></td>
+                                    <td>@s.StartedAt.ToLocalTime().ToString("g")</td>
+                                    <td>
+                                        @if (s.Status == "TERMINATED" || s.Status == "KILLED")
+                                        {
+                                            <span class="status-pill" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); font-weight: bold;">
+                                                🔴 TERMINADA
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="status-pill status-online">🟢 @s.Status</span>
+                                        }
+                                    </td>
+                                    <td style="text-align: right;">
+                                        <div style="display: inline-flex; align-items: center; gap: 0.5rem; justify-content: flex-end;">
+                                            <button type="button" @onclick="() => ToggleSessionRemoteAuthorizationAsync(s.RemoteAnyDeskId)"
+                                                    style="border: none; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 9999px; font-weight: 700; font-size: 0.75rem; transition: all 0.2s; @(authorized ? "background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4);" : "background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4);")">
+                                                @(authorized ? "🟢 Permitido" : "🔴 Bloqueado")
+                                            </button>
+                                            <button class="btn-action btn-action-danger" style="padding: 0.35rem 0.6rem; font-size: 0.75rem;" @onclick="() => KillSessionAsync(s.Id)" title="Encerrar processo da sessão remotamente (Taskkill)">⚡ Taskkill</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+}
+
 @code {
     private List<AgentStatusDto> _agents = new();
+    private List<ComputerDto> _computers = new();
+    private string _search = "";
 
-    protected override async Task OnInitializedAsync() => await LoadAsync();
+    // Agent Selected Modal State
+    private AgentStatusDto? _selectedAgent;
+    private ComputerDto? _selectedComputer;
+    private List<RemoteAnyDeskIdDto> _agentRemoteIds = new();
+    private List<RemoteSessionDto> _agentSessions = new();
 
-    private async Task LoadAsync() => _agents = await ApiClient.GetAgentsAsync();
+    // New Remote ID Form Fields
+    private string _newRemoteId = "";
+    private string _newAlias = "";
+    private string _newLocation = "";
+    private string _newDescription = "";
 
-    private async Task SyncAgent(Guid id)
+    private IEnumerable<AgentStatusDto> _filteredAgents => _agents.Where(a =>
+        string.IsNullOrWhiteSpace(_search) ||
+        a.MachineName.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        a.IPAddress.Contains(_search, StringComparison.OrdinalIgnoreCase) ||
+        a.InstallationId.Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
     {
-        await ApiClient.SyncAgentAsync(id);
         await LoadAsync();
     }
 
-    private async Task DisableAgent(Guid id)
+    private async Task LoadAsync()
     {
-        await ApiClient.DisableAgentAsync(id);
+        _agents = await ApiClient.GetAgentsAsync();
+        _computers = await ApiClient.GetComputersAsync();
+    }
+
+    private ComputerDto? GetComputerForAgent(Guid? computerId)
+    {
+        if (!computerId.HasValue) return null;
+        return _computers.FirstOrDefault(c => c.Id == computerId.Value);
+    }
+
+    private async Task SelectAgentAsync(AgentStatusDto agent)
+    {
+        _selectedAgent = agent;
+        _selectedComputer = GetComputerForAgent(agent.ComputerId);
+
+        if (_selectedComputer != null)
+        {
+            _agentRemoteIds = await ApiClient.GetRemoteIdsByComputerIdAsync(_selectedComputer.Id);
+            _agentSessions = await ApiClient.GetSessionsAsync();
+            _agentSessions = _agentSessions.Where(s => s.ComputerId == _selectedComputer.Id).ToList();
+        }
+        else
+        {
+            _agentRemoteIds = new();
+            _agentSessions = new();
+        }
+    }
+
+    private void CloseModal()
+    {
+        _selectedAgent = null;
+        _selectedComputer = null;
+    }
+
+    private async Task SyncAgentAsync(Guid id)
+    {
+        await ApiClient.SyncAgentAsync(id);
         await LoadAsync();
+        if (_selectedAgent != null && _selectedAgent.Id == id)
+        {
+            await SelectAgentAsync(_selectedAgent);
+        }
+    }
+
+    private async Task SyncComputerAsync(Guid id)
+    {
+        await ApiClient.SyncComputerAsync(id);
+        await LoadAsync();
+        if (_selectedComputer != null && _selectedComputer.Id == id && _selectedAgent != null)
+        {
+            await SelectAgentAsync(_selectedAgent);
+        }
+    }
+
+    private async Task ToggleAgentStatusAsync(AgentStatusDto agent)
+    {
+        if (agent.IsEnabled)
+        {
+            await ApiClient.DisableAgentAsync(agent.Id);
+        }
+        else
+        {
+            await ApiClient.SyncAgentAsync(agent.Id);
+        }
+        await LoadAsync();
+        if (_selectedAgent != null && _selectedAgent.Id == agent.Id)
+        {
+            await SelectAgentAsync(_selectedAgent);
+        }
+    }
+
+    private async Task ToggleAuthorizationAsync(RemoteAnyDeskIdDto r)
+    {
+        r.IsAuthorized = !r.IsAuthorized;
+        await ApiClient.UpdateRemoteIdAsync(r.Id, r);
+        if (_selectedComputer != null)
+        {
+            _agentRemoteIds = await ApiClient.GetRemoteIdsByComputerIdAsync(_selectedComputer.Id);
+        }
+    }
+
+    private async Task AddRemoteIdAsync()
+    {
+        if (_selectedComputer == null || string.IsNullOrWhiteSpace(_newRemoteId)) return;
+
+        var dto = new CreateRemoteAnyDeskIdDto
+        {
+            ComputerId = _selectedComputer.Id,
+            AnyDeskId = _newRemoteId.Trim(),
+            Alias = _newAlias.Trim(),
+            Location = _newLocation.Trim(),
+            Description = _newDescription.Trim()
+        };
+
+        await ApiClient.CreateRemoteIdAsync(dto);
+        _newRemoteId = "";
+        _newAlias = "";
+        _newLocation = "";
+        _newDescription = "";
+        _agentRemoteIds = await ApiClient.GetRemoteIdsByComputerIdAsync(_selectedComputer.Id);
+    }
+
+    private async Task DeleteRemoteIdAsync(Guid id)
+    {
+        await ApiClient.DeleteRemoteIdAsync(id);
+        if (_selectedComputer != null)
+        {
+            _agentRemoteIds = await ApiClient.GetRemoteIdsByComputerIdAsync(_selectedComputer.Id);
+        }
+    }
+
+    private bool IsRemoteAuthorized(string remoteAnyDeskId)
+    {
+        var existing = _agentRemoteIds.FirstOrDefault(r => r.AnyDeskId == remoteAnyDeskId);
+        return existing == null || existing.IsAuthorized;
+    }
+
+    private async Task ToggleSessionRemoteAuthorizationAsync(string remoteAnyDeskId)
+    {
+        var existing = _agentRemoteIds.FirstOrDefault(r => r.AnyDeskId == remoteAnyDeskId);
+        if (existing != null)
+        {
+            existing.IsAuthorized = !existing.IsAuthorized;
+            await ApiClient.UpdateRemoteIdAsync(existing.Id, existing);
+        }
+        else if (_selectedComputer != null)
+        {
+            var newRemote = await ApiClient.CreateRemoteIdAsync(new CreateRemoteAnyDeskIdDto
+            {
+                ComputerId = _selectedComputer.Id,
+                AnyDeskId = remoteAnyDeskId,
+                Alias = "Sessão Remota",
+                Description = "Adicionado via painel de sessões"
+            });
+            if (newRemote != null)
+            {
+                newRemote.IsAuthorized = false;
+                await ApiClient.UpdateRemoteIdAsync(newRemote.Id, newRemote);
+            }
+        }
+
+        if (_selectedComputer != null)
+        {
+            _agentRemoteIds = await ApiClient.GetRemoteIdsByComputerIdAsync(_selectedComputer.Id);
+        }
+    }
+
+    private async Task KillSessionAsync(Guid sessionId)
+    {
+        await ApiClient.KillSessionAsync(sessionId);
+        if (_selectedComputer != null)
+        {
+            _agentSessions = await ApiClient.GetSessionsAsync();
+            _agentSessions = _agentSessions.Where(s => s.ComputerId == _selectedComputer.Id).ToList();
+        }
     }
 }

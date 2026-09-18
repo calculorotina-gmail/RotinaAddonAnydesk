@@ -1,6 +1,6 @@
 {
-  "ServerUrl": "http://localhost:5000",
-  "WebDashboardUrl": "http://localhost:7001",
+  "ServerUrl": "https://anyrotina.calculorotina.com",
+  "WebDashboardUrl": "https://anyrotina.calculorotina.com",
   "AgentId": "",
   "InstallationId": "",
   "HeartbeatIntervalSeconds": 30,

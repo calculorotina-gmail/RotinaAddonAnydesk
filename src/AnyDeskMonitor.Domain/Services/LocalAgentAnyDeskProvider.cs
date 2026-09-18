@@ -344,17 +344,23 @@ public class LocalAgentAnyDeskProvider : IAnyDeskProvider
                             }
 
                             var isIncoming = line.Contains("Incoming", StringComparison.OrdinalIgnoreCase) ||
-                                             line.Contains("incoming", StringComparison.OrdinalIgnoreCase) ||
                                              line.Contains("accept", StringComparison.OrdinalIgnoreCase) ||
-                                             line.Contains("Accept", StringComparison.OrdinalIgnoreCase) ||
                                              line.Contains("inbound", StringComparison.OrdinalIgnoreCase) ||
-                                             line.Contains("Inbound", StringComparison.OrdinalIgnoreCase) ||
                                              line.Contains("request from", StringComparison.OrdinalIgnoreCase) ||
                                              line.Contains("Connecting from", StringComparison.OrdinalIgnoreCase) ||
                                              line.Contains("Receiving", StringComparison.OrdinalIgnoreCase) ||
-                                             line.Contains("Entrada", StringComparison.OrdinalIgnoreCase);
+                                             line.Contains("Entrada", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("Client connected", StringComparison.OrdinalIgnoreCase);
 
-                            var direction = isIncoming ? "ENTRADA" : "SAÍDA";
+                            var isOutgoing = line.Contains("Connecting to", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("Outgoing", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("outbound", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("Sending", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("Saida", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("Saída", StringComparison.OrdinalIgnoreCase) ||
+                                             line.Contains("connect to", StringComparison.OrdinalIgnoreCase);
+
+                            var direction = isOutgoing ? "SAÍDA" : (isIncoming ? "ENTRADA" : "ENTRADA");
                             var sessionKey = $"{foundId}_{direction}";
 
                             if (sessionKeys.Add(sessionKey))

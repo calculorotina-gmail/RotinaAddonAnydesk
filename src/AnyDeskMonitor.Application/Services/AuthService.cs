@@ -45,7 +45,20 @@ public class AuthService : IAuthService
 
     public async Task SeedDefaultUsersAsync()
     {
-        if (!await _db.Users.AnyAsync())
+        if (!await _db.Users.AnyAsync(u => u.Username == "admin@anydesk.com"))
+        {
+            var adminAnydesk = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = "admin@anydesk.com",
+                PasswordHash = _passwordHasher.HashPassword("admin123"),
+                Role = UserRole.Administrator,
+                CreatedAt = DateTime.UtcNow
+            };
+            _db.Users.Add(adminAnydesk);
+        }
+
+        if (!await _db.Users.AnyAsync(u => u.Username == "admin"))
         {
             var admin = new User
             {
@@ -55,7 +68,11 @@ public class AuthService : IAuthService
                 Role = UserRole.Administrator,
                 CreatedAt = DateTime.UtcNow
             };
+            _db.Users.Add(admin);
+        }
 
+        if (!await _db.Users.AnyAsync(u => u.Username == "operator"))
+        {
             var operatorUser = new User
             {
                 Id = Guid.NewGuid(),
@@ -64,7 +81,11 @@ public class AuthService : IAuthService
                 Role = UserRole.Operator,
                 CreatedAt = DateTime.UtcNow
             };
+            _db.Users.Add(operatorUser);
+        }
 
+        if (!await _db.Users.AnyAsync(u => u.Username == "viewer"))
+        {
             var viewer = new User
             {
                 Id = Guid.NewGuid(),
@@ -73,9 +94,9 @@ public class AuthService : IAuthService
                 Role = UserRole.Viewer,
                 CreatedAt = DateTime.UtcNow
             };
-
-            _db.Users.AddRange(admin, operatorUser, viewer);
-            await _db.SaveChangesAsync();
+            _db.Users.Add(viewer);
         }
+
+        await _db.SaveChangesAsync();
     }
 }

@@ -23,7 +23,7 @@ public class TrayApplicationContext : ApplicationContext
     private ToolStripMenuItem _btnStopService = null!;
     private ToolStripMenuItem _btnRestartService = null!;
 
-    private string _dashboardUrl = "http://localhost:7001";
+    private string _dashboardUrl = "https://anyrotina.calculorotina.com/anydesk-panel/";
 
     public TrayApplicationContext()
     {

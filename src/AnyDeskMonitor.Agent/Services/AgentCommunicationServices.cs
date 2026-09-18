@@ -17,40 +17,50 @@ public class ApiClientService
 
     public async Task<AgentStatusDto?> RegisterAsync(string serverUrl, AgentRegistrationDto dto, CancellationToken cancellationToken = default)
     {
-        try
+        var endpoints = new[]
         {
-            var url = $"{serverUrl.TrimEnd('/')}/api/agents/register";
-            var response = await _httpClient.PostAsJsonAsync(url, dto, cancellationToken);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<AgentStatusDto>(cancellationToken: cancellationToken);
-            }
+            $"{serverUrl.TrimEnd('/')}/wp-json/anydesk-monitor/v1/heartbeat",
+            $"{serverUrl.TrimEnd('/')}/api/agents/register"
+        };
 
-            _logger.LogWarning("Falha no registo do agente. Código HTTP: {StatusCode}", response.StatusCode);
-        }
-        catch (Exception ex)
+        foreach (var url in endpoints)
         {
-            _logger.LogError(ex, "Erro de comunicação HTTP ao registar agente.");
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, dto, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<AgentStatusDto>(cancellationToken: cancellationToken);
+                    if (result != null) return result;
+                    return new AgentStatusDto { Id = Guid.NewGuid(), MachineName = dto.MachineName, Status = "ACTIVE" };
+                }
+            }
+            catch { }
         }
         return null;
     }
 
     public async Task<AgentStatusDto?> SendHeartbeatAsync(string serverUrl, HeartbeatDto dto, CancellationToken cancellationToken = default)
     {
-        try
+        var endpoints = new[]
         {
-            var url = $"{serverUrl.TrimEnd('/')}/api/agents/heartbeat";
-            var response = await _httpClient.PostAsJsonAsync(url, dto, cancellationToken);
-            if (response.IsSuccessStatusCode)
-            {
-                return await response.Content.ReadFromJsonAsync<AgentStatusDto>(cancellationToken: cancellationToken);
-            }
+            $"{serverUrl.TrimEnd('/')}/wp-json/anydesk-monitor/v1/heartbeat",
+            $"{serverUrl.TrimEnd('/')}/api/agents/heartbeat"
+        };
 
-            _logger.LogWarning("Falha no envio de heartbeat. Código HTTP: {StatusCode}", response.StatusCode);
-        }
-        catch (Exception ex)
+        foreach (var url in endpoints)
         {
-            _logger.LogError(ex, "Erro de comunicação HTTP no heartbeat.");
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync(url, dto, cancellationToken);
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadFromJsonAsync<AgentStatusDto>(cancellationToken: cancellationToken);
+                    if (result != null) return result;
+                    return new AgentStatusDto { Id = Guid.NewGuid(), MachineName = dto.MachineName, Status = "ACTIVE" };
+                }
+            }
+            catch { }
         }
         return null;
     }

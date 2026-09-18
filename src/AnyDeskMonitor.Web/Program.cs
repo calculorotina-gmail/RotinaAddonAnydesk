@@ -41,6 +41,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+app.UseMiddleware<DomainEnforcementMiddleware>();
 app.UseAntiforgery();
 
 app.MapRazorComponents<App>()

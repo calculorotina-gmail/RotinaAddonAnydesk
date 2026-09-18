@@ -1,18 +1,25 @@
-﻿[2026-09-12 10:18:50] =========================================================
-[2026-09-12 10:18:50]   AnyDeskMonitor / RotinaAddonAnydesk BUILD AUTOMATION
-[2026-09-12 10:18:50] =========================================================
-[2026-09-12 10:18:50] Etapa 1/12: A limpar compilaÃ§Ãµes e serviÃ§os anteriores...
-[2026-09-12 10:18:55] DiretÃ³rios de build limpos com sucesso.
-[2026-09-12 10:18:55] Etapa 2/12: A processar o Ã­cone icon.png para .exe e instalador...
-[2026-09-12 10:18:56] Ãcone 'icon.png' convertido e aplicado com sucesso em app.ico, icon.ico e src/AnyDeskMonitor.Agent/app.ico.
-[2026-09-12 10:18:56] Etapa 3/12: A restaurar dependÃªncias NuGet...
-[2026-09-12 10:18:57]   Determining projects to restore...
-  All projects are up-to-date for restore.
-[2026-09-12 10:18:57] Etapa 4/12: A validar ambiente de desenvolvimento...
-[2026-09-12 10:18:57] SDK .NET detetado: 9.0.306
-[2026-09-12 10:18:57] Inno Setup Compiler detetado em: C:\Program Files (x86)\Inno Setup 6\ISCC.exe
-[2026-09-12 10:18:57] Etapa 5/12: A compilar a Solution (Release)...
-[2026-09-12 10:19:01]   AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
+[2026-09-18 00:11:30] =========================================================
+[2026-09-18 00:11:30]   AnyDeskMonitor / RotinaAddonAnydesk BUILD AUTOMATION
+[2026-09-18 00:11:30] =========================================================
+[2026-09-18 00:11:30] Etapa 1/12: A limpar compilações e serviços anteriores...
+[2026-09-18 00:11:31] Diretórios de build limpos com sucesso.
+[2026-09-18 00:11:31] Etapa 2/12: A processar o ícone icon.png para .exe e instalador...
+[2026-09-18 00:11:32] Ícone 'icon.png' convertido e aplicado com sucesso em app.ico, icon.ico e src/AnyDeskMonitor.Agent/app.ico.
+[2026-09-18 00:11:32] Etapa 3/12: A restaurar dependências NuGet...
+[2026-09-18 00:11:34]   Determining projects to restore...
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\AnyDeskMonitor.Domain.csproj (in 174 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\AnyDeskMonitor.Shared.csproj (in 174 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\AnyDeskMonitor.Application.csproj (in 302 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Agent\AnyDeskMonitor.Agent.csproj (in 312 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Infrastructure\AnyDeskMonitor.Infrastructure.csproj (in 324 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Web\AnyDeskMonitor.Web.csproj (in 318 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Api\AnyDeskMonitor.Api.csproj (in 326 ms).
+  1 of 8 projects are up-to-date for restore.
+[2026-09-18 00:11:34] Etapa 4/12: A validar ambiente de desenvolvimento...
+[2026-09-18 00:11:34] SDK .NET detetado: 9.0.306
+[2026-09-18 00:11:35] Inno Setup Compiler detetado em: C:\Program Files (x86)\Inno Setup 6\ISCC.exe
+[2026-09-18 00:11:35] Etapa 5/12: A compilar a Solution (Release)...
+[2026-09-18 00:11:54]   AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
   AnyDeskMonitor.Domain -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\bin\Release\net8.0\AnyDeskMonitor.Domain.dll
   AnyDeskMonitor.Application -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\bin\Release\net8.0\AnyDeskMonitor.Application.dll
   AnyDeskMonitor.Agent -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Agent\bin\Release\net8.0-windows\RotinaAddonAnydesk.dll
@@ -25,50 +32,50 @@ Build succeeded.
     0 Warning(s)
     0 Error(s)
 
-Time Elapsed 00:00:03.13
-[2026-09-12 10:19:01] Etapa 6/12: A executar testes unitÃ¡rios (xUnit)...
-[2026-09-12 10:19:04] Test run for C:\Users\alll\Documents\RotinaAddonAnydesk\tests\AnyDeskMonitor.Tests\bin\Release\net8.0-windows\AnyDeskMonitor.Tests.dll (.NETCoreApp,Version=v8.0)
+Time Elapsed 00:00:19.09
+[2026-09-18 00:11:54] Etapa 6/12: A executar testes unitários (xUnit)...
+[2026-09-18 00:11:58] Test run for C:\Users\alll\Documents\RotinaAddonAnydesk\tests\AnyDeskMonitor.Tests\bin\Release\net8.0-windows\AnyDeskMonitor.Tests.dll (.NETCoreApp,Version=v8.0)
 VSTest version 17.14.1 (x64)
 
 Starting test execution, please wait...
 A total of 1 test files matched the specified pattern.
 
 Passed!  - Failed:     0, Passed:     9, Skipped:     0, Total:     9, Duration: 1 s - AnyDeskMonitor.Tests.dll (net8.0)
-[2026-09-12 10:19:04] Etapa 7/12: A publicar ASP.NET Core Web API...
-[2026-09-12 10:19:11]   Determining projects to restore...
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\AnyDeskMonitor.Domain.csproj (in 361 ms).
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\AnyDeskMonitor.Shared.csproj (in 361 ms).
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\AnyDeskMonitor.Application.csproj (in 361 ms).
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Infrastructure\AnyDeskMonitor.Infrastructure.csproj (in 404 ms).
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Api\AnyDeskMonitor.Api.csproj (in 427 ms).
+[2026-09-18 00:11:58] Etapa 7/12: A publicar ASP.NET Core Web API...
+[2026-09-18 00:12:08]   Determining projects to restore...
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\AnyDeskMonitor.Shared.csproj (in 623 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\AnyDeskMonitor.Application.csproj (in 623 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\AnyDeskMonitor.Domain.csproj (in 623 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Infrastructure\AnyDeskMonitor.Infrastructure.csproj (in 680 ms).
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Api\AnyDeskMonitor.Api.csproj (in 691 ms).
   AnyDeskMonitor.Domain -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\bin\Release\net8.0\AnyDeskMonitor.Domain.dll
   AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
   AnyDeskMonitor.Application -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\bin\Release\net8.0\AnyDeskMonitor.Application.dll
   AnyDeskMonitor.Infrastructure -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Infrastructure\bin\Release\net8.0\AnyDeskMonitor.Infrastructure.dll
   AnyDeskMonitor.Api -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Api\bin\Release\net8.0\win-x64\AnyDeskMonitor.Api.dll
   AnyDeskMonitor.Api -> C:\Users\alll\Documents\RotinaAddonAnydesk\publish\Api\
-[2026-09-12 10:19:11] Etapa 8/12: A publicar Dashboard Blazor Web...
-[2026-09-12 10:19:18]   Determining projects to restore...
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Web\AnyDeskMonitor.Web.csproj (in 596 ms).
+[2026-09-18 00:12:08] Etapa 8/12: A publicar Dashboard Blazor Web...
+[2026-09-18 00:12:19]   Determining projects to restore...
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Web\AnyDeskMonitor.Web.csproj (in 576 ms).
   4 of 5 projects are up-to-date for restore.
-  AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
   AnyDeskMonitor.Domain -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\bin\Release\net8.0\AnyDeskMonitor.Domain.dll
+  AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
   AnyDeskMonitor.Application -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Application\bin\Release\net8.0\AnyDeskMonitor.Application.dll
   AnyDeskMonitor.Infrastructure -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Infrastructure\bin\Release\net8.0\AnyDeskMonitor.Infrastructure.dll
   AnyDeskMonitor.Web -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Web\bin\Release\net8.0\win-x64\AnyDeskMonitor.Web.dll
   AnyDeskMonitor.Web -> C:\Users\alll\Documents\RotinaAddonAnydesk\publish\Web\
-[2026-09-12 10:19:18] Etapa 9/12: A publicar Agente Windows (RotinaAddonAnydesk Portable Single File)...
-[2026-09-12 10:19:26]   Determining projects to restore...
-  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Agent\AnyDeskMonitor.Agent.csproj (in 453 ms).
+[2026-09-18 00:12:19] Etapa 9/12: A publicar Agente Windows (RotinaAddonAnydesk Portable Single File)...
+[2026-09-18 00:12:28]   Determining projects to restore...
+  Restored C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Agent\AnyDeskMonitor.Agent.csproj (in 501 ms).
   2 of 3 projects are up-to-date for restore.
   AnyDeskMonitor.Shared -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Shared\bin\Release\net8.0\AnyDeskMonitor.Shared.dll
   AnyDeskMonitor.Domain -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Domain\bin\Release\net8.0\AnyDeskMonitor.Domain.dll
   AnyDeskMonitor.Agent -> C:\Users\alll\Documents\RotinaAddonAnydesk\src\AnyDeskMonitor.Agent\bin\Release\net8.0-windows\win-x64\RotinaAddonAnydesk.dll
   AnyDeskMonitor.Agent -> C:\Users\alll\Documents\RotinaAddonAnydesk\publish\Agent\
-[2026-09-12 10:19:26] Etapa 10/12: A gerar ficheiros executÃ¡veis portÃ¡teis...
-[2026-09-12 10:19:29] ExecutÃ¡veis 'RotinaAddonAnydesk.exe' e 'Aplicativo.exe' gerados com sucesso com o Ã­cone de icon.png.
-[2026-09-12 10:19:29] Etapa 11/12: A compilar instalador Inno Setup utilizando o Ã­cone...
-[2026-09-12 10:20:59] Inno Setup 6 Command-Line Compiler
+[2026-09-18 00:12:28] Etapa 10/12: A gerar ficheiros executáveis portáteis...
+[2026-09-18 00:12:29] Executáveis 'RotinaAddonAnydesk.exe' e 'Aplicativo.exe' gerados com sucesso com o ícone de icon.png.
+[2026-09-18 00:12:29] Etapa 11/12: A compilar instalador Inno Setup utilizando o ícone...
+[2026-09-18 00:13:48] Inno Setup 6 Command-Line Compiler
 Copyright (C) 1997-2025 Jordan Russell. All rights reserved.
 Portions Copyright (C) 2000-2025 Martijn Laan. All rights reserved.
 Portions Copyright (C) 2001-2004 Alex Yackimoff. All rights reserved.
@@ -181,17 +188,17 @@ Creating setup files
 
 Warning: The [Setup] section directive "PrivilegesRequired" is set to "admin" but per-user areas (HKCU,userstartup) are used by the script. Regardless of the version of Windows, if the installation is running in administrative install mode then you should be careful about making any per-user area changes: such changes may not achieve what you are intending. See the "UsedUserAreasWarning" topic in help file for more information.
 
-Successful compile (89,265 sec). Resulting Setup program filename is:
+Successful compile (78,437 sec). Resulting Setup program filename is:
 C:\Users\alll\Documents\RotinaAddonAnydesk\publish\Installer\RotinaAddonAnydesk-Setup.exe
-[2026-09-12 10:20:59] Instaladores 'RotinaAddonAnydesk-Setup.exe' e 'aplicativo-Setup.exe' criados com sucesso com o Ã­cone.
-[2026-09-12 10:20:59] Etapa 12/12: A validar ficheiros gerados...
-[2026-09-12 10:20:59] Ficheiro validado: RotinaAddonAnydesk.exe (164099958 bytes)
-[2026-09-12 10:20:59] Ficheiro validado: Aplicativo.exe (164099958 bytes)
-[2026-09-12 10:20:59] Ficheiro validado: publish/Agent/RotinaAddonAnydesk.exe (164099958 bytes)
-[2026-09-12 10:20:59] Ficheiro validado: publish/Installer/RotinaAddonAnydesk-Setup.exe (116029675 bytes)
-[2026-09-12 10:20:59] Ficheiro validado: RotinaAddonAnydesk-Setup.exe (116029675 bytes)
-[2026-09-12 10:20:59] Ficheiro validado: aplicativo-Setup.exe (116029675 bytes)
-[2026-09-12 10:20:59] =========================================================
-[2026-09-12 10:20:59]   BUILD CONCLUÃDO COM SUCESSO
-[2026-09-12 10:20:59]   Tempo Total de ExecuÃ§Ã£o: 128,64s
-[2026-09-12 10:20:59] =========================================================
+[2026-09-18 00:13:49] Instaladores 'RotinaAddonAnydesk-Setup.exe' e 'aplicativo-Setup.exe' criados com sucesso com o ícone.
+[2026-09-18 00:13:49] Etapa 12/12: A validar ficheiros gerados...
+[2026-09-18 00:13:49] Ficheiro validado: RotinaAddonAnydesk.exe (164099958 bytes)
+[2026-09-18 00:13:49] Ficheiro validado: Aplicativo.exe (164099958 bytes)
+[2026-09-18 00:13:49] Ficheiro validado: publish/Agent/RotinaAddonAnydesk.exe (164099958 bytes)
+[2026-09-18 00:13:49] Ficheiro validado: publish/Installer/RotinaAddonAnydesk-Setup.exe (116060022 bytes)
+[2026-09-18 00:13:49] Ficheiro validado: RotinaAddonAnydesk-Setup.exe (116060022 bytes)
+[2026-09-18 00:13:49] Ficheiro validado: aplicativo-Setup.exe (116060022 bytes)
+[2026-09-18 00:13:49] =========================================================
+[2026-09-18 00:13:49]   BUILD CONCLUÍDO COM SUCESSO
+[2026-09-18 00:13:49]   Tempo Total de Execução: 139,10s
+[2026-09-18 00:13:49] =========================================================

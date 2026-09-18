@@ -4,28 +4,44 @@
 @inject WebApiClient ApiClient
 @inject NavigationManager Navigation
 
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-header">TOTAL COMPUTADORES</div>
-        <div class="stat-value">@_stats.TotalComputers</div>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+    <div>
+        <h2 style="margin: 0; font-size: 1.6rem; color: #f8fafc; font-weight: 800;">🌐 Painel Geral de Monitorização & DevOps</h2>
+        <p style="color: var(--text-secondary); margin: 0.25rem 0 0 0;">Gestão unificada dos computadores, AnyDesk IDs e agentes locais instalados.</p>
     </div>
-    <div class="stat-card">
+    <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+        <div style="display: inline-flex; align-items: center; gap: 0.5rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.4rem 0.85rem; border-radius: 9999px;">
+            <span style="width: 8px; height: 8px; background: #10b981; border-radius: 50%; display: inline-block;"></span>
+            <span style="font-size: 0.85rem; font-weight: 600; color: #34d399;">Novamira Sync Active</span>
+        </div>
+        <a href="https://anyrotina.calculorotina.com/publish/RotinaAddonAnydesk-Setup.exe" target="_blank" class="btn-action" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; text-decoration: none; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 0.4rem;">
+            📥 Descarregar Agente (.exe)
+        </a>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card" style="border-left: 4px solid #3b82f6;">
+        <div class="stat-header">TOTAL COMPUTADORES</div>
+        <div class="stat-value" style="color: #60a5fa;">@_stats.TotalComputers</div>
+    </div>
+    <div class="stat-card" style="border-left: 4px solid #10b981;">
         <div class="stat-header">COMPUTADORES ONLINE</div>
         <div class="stat-value" style="color: #10b981;">@_stats.OnlineComputers</div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" style="border-left: 4px solid #ef4444;">
         <div class="stat-header">COMPUTADORES OFFLINE</div>
         <div class="stat-value" style="color: #ef4444;">@_stats.OfflineComputers</div>
     </div>
-    <div class="stat-card">
-        <div class="stat-header">AGENTES ATIVOS</div>
-        <div class="stat-value" style="color: #3b82f6;">@_stats.ActiveAgents</div>
+    <div class="stat-card" style="border-left: 4px solid #8b5cf6;">
+        <div class="stat-header">AGENTES LOCAIS ATIVOS</div>
+        <div class="stat-value" style="color: #c084fc;">@_stats.ActiveAgents</div>
     </div>
 </div>
 
 <div class="card-table">
     <div class="table-toolbar">
-        <input class="search-input" placeholder="Pesquisar por computador, AnyDesk ID ou alias..." @bind="_search" @bind:event="oninput" @onkeyup="FilterComputers" style="min-width: 300px;" />
+        <input class="search-input" placeholder="Pesquisar por computador, AnyDesk ID ou alias..." @bind="_search" @bind:event="oninput" @onkeyup="FilterComputers" style="min-width: 320px;" />
         
         <div style="display: flex; gap: 0.5rem;">
             <select class="select-filter" @onchange="OnStatusFilterChanged">
@@ -43,7 +59,7 @@
         <thead>
             <tr>
                 <th>Computador</th>
-                <th>ID AnyDesk</th>
+                <th>ID AnyDesk Local</th>
                 <th>Sistema Operacional</th>
                 <th>IP Local</th>
                 <th>Status</th>
@@ -66,13 +82,13 @@
                 {
                     <tr>
                         <td>
-                            <strong>@c.Name</strong><br />
+                            <strong style="color: #f8fafc; font-size: 1.05rem;">@c.Name</strong><br />
                             <small style="color: var(--text-secondary);">@c.MachineName</small>
                         </td>
                         <td>
                             @if (!string.IsNullOrWhiteSpace(c.AnyDeskId))
                             {
-                                <span style="font-family: monospace; font-weight: bold; background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 4px;">@c.AnyDeskId</span>
+                                <span style="font-family: monospace; font-weight: bold; background: rgba(255,255,255,0.08); padding: 3px 8px; border-radius: 6px; color: #f8fafc;">@c.AnyDeskId</span>
                             }
                             else
                             {
@@ -99,8 +115,8 @@
                             @(c.LastHeartbeat.HasValue ? c.LastHeartbeat.Value.ToLocalTime().ToString("g") : "Nunca")
                         </td>
                         <td>
-                            <a class="btn-action" href="computers/@c.Id">Detalhes</a>
-                            <button class="btn-action" @onclick="() => SyncComputerAsync(c.Id)">Sincronizar</button>
+                            <a class="btn-action" href="computers/@c.Id">⚙️ Opções</a>
+                            <button class="btn-action" @onclick="() => SyncComputerAsync(c.Id)">🔄 Sincronizar</button>
                         </td>
                     </tr>
                 }
@@ -112,8 +128,8 @@
 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(450px, 1fr)); gap: 1.5rem; margin-top: 2rem;">
     <div class="card-table">
         <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
-                🌐 IDs Remotos e Localização
+            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; color: #f8fafc;">
+                🌐 IDs Remotos e Geolocalização
             </h3>
             <a class="btn-action" href="remoteids">Ver Todos</a>
         </div>
@@ -156,7 +172,7 @@
 
     <div class="card-table">
         <div class="table-toolbar" style="display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; color: #f8fafc;">
                 📡 Sessões Remotas Recentes
             </h3>
             <a class="btn-action" href="sessions">Ver Todas</a>

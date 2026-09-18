@@ -4,8 +4,8 @@ namespace AnyDeskMonitor.Agent.Services;
 
 public class AgentConfig
 {
-    public string ServerUrl { get; set; } = "http://localhost:5000";
-    public string WebDashboardUrl { get; set; } = "http://localhost:7001";
+    public string ServerUrl { get; set; } = "https://anyrotina.calculorotina.com";
+    public string WebDashboardUrl { get; set; } = "https://anyrotina.calculorotina.com/anydesk-panel/";
     public string AgentId { get; set; } = string.Empty;
     public string InstallationId { get; set; } = Guid.NewGuid().ToString();
     public int HeartbeatIntervalSeconds { get; set; } = 30;
@@ -45,9 +45,14 @@ public class AgentConfig
                         config.InstallationId = Guid.NewGuid().ToString();
                         updated = true;
                     }
-                    if (string.IsNullOrWhiteSpace(config.WebDashboardUrl) || config.WebDashboardUrl == "http://localhost:5000")
+                    if (string.IsNullOrWhiteSpace(config.WebDashboardUrl) || config.WebDashboardUrl.Contains("localhost") || !config.WebDashboardUrl.Contains("anydesk-panel"))
                     {
-                        config.WebDashboardUrl = "http://localhost:7001";
+                        config.WebDashboardUrl = "https://anyrotina.calculorotina.com/anydesk-panel/";
+                        updated = true;
+                    }
+                    if (string.IsNullOrWhiteSpace(config.ServerUrl) || config.ServerUrl.Contains("localhost"))
+                    {
+                        config.ServerUrl = "https://anyrotina.calculorotina.com";
                         updated = true;
                     }
                     if (updated)
